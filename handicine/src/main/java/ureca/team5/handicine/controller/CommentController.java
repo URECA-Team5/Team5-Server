@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ureca.team5.handicine.dto.CommentDTO;
+import ureca.team5.handicine.service.CommentService;
 
 import java.util.List;
 
