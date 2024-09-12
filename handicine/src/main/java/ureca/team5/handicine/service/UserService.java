@@ -32,7 +32,7 @@ public class UserService {
         User newUser = new User();
         newUser.setUsername(userDTO.getUsername());
         newUser.setEmail(userDTO.getEmail());
-        newUser.setPassword(userDTO.getPassword()); // 비밀번호 암호화는 별도의 로직으로 처리
+        // newUser.setPassword(userDTO.getPassword()); // 비밀번호 암호화는 별도의 로직으로 처리
         newUser.setRole(roleRepository.findByRoleName(userDTO.getRoleName()));
         userRepository.save(newUser);
         return new UserDTO(newUser.getUserId(), newUser.getUsername(), newUser.getEmail(), newUser.getRole().getRoleName());
