@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ureca.team5.handicine.dto.RoleDTO;
+import ureca.team5.handicine.service.RoleService;
 
 import java.util.List;
 
