@@ -2,6 +2,7 @@ package ureca.team5.handicine.service;
 
 import ureca.team5.handicine.dto.AnswerDTO;
 import ureca.team5.handicine.entity.Answer;
+import ureca.team5.handicine.entity.Question;
 import ureca.team5.handicine.repository.AnswerRepository;
 import ureca.team5.handicine.repository.QuestionRepository;
 import ureca.team5.handicine.repository.UserRepository;
@@ -28,22 +29,24 @@ public class AnswerService {
         return answers.stream().map(this::convertToDTO).collect(Collectors.toList());
     }
 
-    public AnswerDTO createAnswer(AnswerDTO answerDTO) {
+    public AnswerDTO createAnswer(Long questionId, AnswerDTO answerDTO) {
+        Question question = questionRepository.findById(questionId)
+                .orElseThrow(() -> new RuntimeException("Question not found."));
         Answer answer = new Answer();
         answer.setContent(answerDTO.getContent());
-        answer.setQuestion(questionRepository.findById(answerDTO.getQuestionId())
-                .orElseThrow(() -> new RuntimeException("Question not found.")));
         answer.setUser(userRepository.findByUsername(answerDTO.getAuthorUsername())
                 .orElseThrow(() -> new RuntimeException("User not found.")));
-        answerRepository.save(answer);
-        return convertToDTO(answer);
+        answer.setQuestion(question);
+        Answer savedAnswer = answerRepository.save(answer);
+        return convertToDTO(savedAnswer);
     }
 
-    public void updateAnswer(Long id, AnswerDTO answerDTO) {
+    public AnswerDTO updateAnswer(Long id, AnswerDTO answerDTO) {
         Answer answer = answerRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Answer not found."));
         answer.setContent(answerDTO.getContent());
-        answerRepository.save(answer);
+        Answer updatedAnswer = answerRepository.save(answer);
+        return convertToDTO(updatedAnswer);
     }
 
     public void deleteAnswer(Long id) {
