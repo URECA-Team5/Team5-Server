@@ -5,6 +5,7 @@ import ureca.team5.handicine.entity.User;
 import ureca.team5.handicine.repository.UserRepository;
 import ureca.team5.handicine.repository.RoleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -17,6 +18,9 @@ public class UserService {
 
     @Autowired
     private RoleRepository roleRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     public UserDTO getUserById(Long id) {
         Optional<User> user = userRepository.findById(id);
@@ -32,10 +36,10 @@ public class UserService {
         User newUser = new User();
         newUser.setUsername(userDTO.getUsername());
         newUser.setEmail(userDTO.getEmail());
-        // newUser.setPassword(userDTO.getPassword()); // 비밀번호 암호화는 별도의 로직으로 처리
+        newUser.setPassword(passwordEncoder.encode(userDTO.getPassword()));
         newUser.setRole(roleRepository.findByRoleName(userDTO.getRoleName()));
         userRepository.save(newUser);
-        return new UserDTO(newUser.getUserId(), newUser.getUsername(), newUser.getEmail(), newUser.getRole().getRoleName());
+        return new UserDTO(newUser.getUserId(), newUser.getUsername(), newUser.getEmail(), newUser.getRole().getRoleName(), newUser.getPassword());
     }
 
     public UserDTO updateUser(Long id, UserDTO userDTO) {
@@ -45,9 +49,12 @@ public class UserService {
             existingUser.setUsername(userDTO.getUsername());
             existingUser.setEmail(userDTO.getEmail());
             existingUser.setRole(roleRepository.findByRoleName(userDTO.getRoleName()));
+            if (userDTO.getPassword() != null && !userDTO.getPassword().isEmpty()) {
+                existingUser.setPassword(passwordEncoder.encode(userDTO.getPassword())); // 비밀번호 암호화
+            }
             userRepository.save(existingUser);
 
-            return new UserDTO(existingUser.getUserId(), existingUser.getUsername(), existingUser.getEmail(), existingUser.getRole().getRoleName());
+            return new UserDTO(existingUser.getUserId(), existingUser.getUsername(), existingUser.getEmail(), existingUser.getRole().getRoleName(), existingUser.getPassword());
         } else {
             throw new RuntimeException("User not found.");
         }
