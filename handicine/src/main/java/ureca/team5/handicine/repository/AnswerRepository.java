@@ -5,5 +5,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface AnswerRepository extends JpaRepository<Answer, Long> {
-    List<Answer> findByQuestionQuestionId(Long questionId);  // 특정 질문에 대한 답변 목록
+    List<Answer> findByQuestionId(Long questionId);  // 특정 질문에 대한 답변 목록
 }
