@@ -39,12 +39,13 @@ public class PostService {
         return convertToDTO(post);
     }
 
-    public void updatePost(Long id, PostDTO postDTO) {
+    public PostDTO updatePost(Long id, PostDTO postDTO) {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Post not found."));
         post.setTitle(postDTO.getTitle());
         post.setContent(postDTO.getContent());
-        postRepository.save(post);
+        Post updatedPost = postRepository.save(post);
+        return convertToDTO(updatedPost);
     }
 
     public void deletePost(Long id) {
