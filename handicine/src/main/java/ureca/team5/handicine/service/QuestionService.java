@@ -38,12 +38,16 @@ public class QuestionService {
         return convertToDTO(question);
     }
 
-    public void updateQuestion(Long id, QuestionDTO questionDTO) {
+    public QuestionDTO updateQuestion(Long id, QuestionDTO questionDTO) {
         Question question = questionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Question not found."));
+
         question.setTitle(questionDTO.getTitle());
         question.setContent(questionDTO.getContent());
-        questionRepository.save(question);
+
+        Question updatedQuestion = questionRepository.save(question);
+
+        return convertToDTO(updatedQuestion);
     }
 
     public void deleteQuestion(Long id) {
