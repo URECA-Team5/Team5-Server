@@ -38,7 +38,7 @@ public class UserService {
         return new UserDTO(newUser.getUserId(), newUser.getUsername(), newUser.getEmail(), newUser.getRole().getRoleName());
     }
 
-    public void updateUser(Long id, UserDTO userDTO) {
+    public UserDTO updateUser(Long id, UserDTO userDTO) {
         Optional<User> userOptional = userRepository.findById(id);
         if (userOptional.isPresent()) {
             User existingUser = userOptional.get();
@@ -46,6 +46,8 @@ public class UserService {
             existingUser.setEmail(userDTO.getEmail());
             existingUser.setRole(roleRepository.findByRoleName(userDTO.getRoleName()));
             userRepository.save(existingUser);
+
+            return new UserDTO(existingUser.getUserId(), existingUser.getUsername(), existingUser.getEmail(), existingUser.getRole().getRoleName());
         } else {
             throw new RuntimeException("User not found.");
         }
