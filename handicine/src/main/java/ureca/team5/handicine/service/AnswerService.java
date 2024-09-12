@@ -24,7 +24,7 @@ public class AnswerService {
     private UserRepository userRepository;
 
     public List<AnswerDTO> getAnswersByQuestionId(Long questionId) {
-        List<Answer> answers = answerRepository.findByQuestionId(questionId);
+        List<Answer> answers = answerRepository.findByQuestionQuestionId(questionId);
         return answers.stream().map(this::convertToDTO).collect(Collectors.toList());
     }
 
