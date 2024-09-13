@@ -1,5 +1,6 @@
 package ureca.team5.handicine.config;
 
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import ureca.team5.handicine.security.CustomUserDetailsService;
 import ureca.team5.handicine.security.JwtAuthenticationFilter;
@@ -39,7 +40,7 @@ public class SecurityConfig {
                         .requestMatchers("/", "/qna", "/qna/{question_id}", "/board", "/board/{post_id}", "/signup", "/login", "/api/users/signup", "/api/users/login").permitAll()
 
                         // Q&A 게시판에 답변 작성은 전문가만 가능
-                        .requestMatchers("/qna/{question_id}/answers").hasRole("EXPERT")
+                        .requestMatchers(HttpMethod.POST, "/qna/{question_id}/answers").hasRole("EXPERT")
 
                         // Role API 등 관리자가 필요한 요청
                         .requestMatchers("/api/roles/**").hasRole("ADMIN")
