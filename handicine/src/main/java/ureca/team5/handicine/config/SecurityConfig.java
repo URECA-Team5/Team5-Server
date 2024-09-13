@@ -22,6 +22,9 @@ public class SecurityConfig {
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
 
+    @Autowired
+    private CustomUserDetailsService customUserDetailsService;
+
     // 최신 SecurityFilterChain 방식
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
