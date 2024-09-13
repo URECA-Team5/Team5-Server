@@ -1,6 +1,7 @@
 package ureca.team5.handicine.config;
 
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import ureca.team5.handicine.security.CustomUserDetailsService;
 import ureca.team5.handicine.security.JwtAuthenticationFilter;
 import ureca.team5.handicine.security.JwtTokenProvider;
 import org.springframework.beans.factory.annotation.Autowired;
