@@ -3,6 +3,7 @@ package ureca.team5.handicine.security;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
@@ -10,7 +11,8 @@ import java.util.Date;
 @Component
 public class JwtTokenProvider {
 
-    private final String SECRET_KEY = "your-secret-key"; // 이 키는 보안적으로 관리해야 함
+    @Value("${jwt.secret}")
+    private String SECRET_KEY;
 
     // 토큰 생성
     public String createToken(String username, String role) {
