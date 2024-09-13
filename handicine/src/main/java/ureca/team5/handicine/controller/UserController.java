@@ -20,7 +20,7 @@ public class UserController {
         return ResponseEntity.ok(createdUser);
     }
 
-    /* 로그인
+    // 로그인
     @PostMapping("/login")
     public ResponseEntity<String> login(@RequestBody LoginRequestDTO loginRequest) {
         String token = userService.login(loginRequest);
@@ -33,7 +33,6 @@ public class UserController {
         userService.logout();
         return ResponseEntity.ok("Logged out successfully");
     }
-    */
 
     // 마이페이지 조회
     @GetMapping("/profile/{user_id}")
