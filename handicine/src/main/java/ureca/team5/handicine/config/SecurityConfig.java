@@ -31,11 +31,17 @@ public class SecurityConfig {
                 .httpBasic(AbstractHttpConfigurer::disable) // HTTP Basic 인증 비활성화
                 .sessionManagement(AbstractHttpConfigurer::disable) // 세션 비활성화
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/api/auth/**").permitAll() // 인증 관련 API 누구나 접근 가능
-                        .requestMatchers("/api/qna/**").permitAll() // Q&A 게시판 누구나 접근 가능
-                        .requestMatchers("/api/board/**").permitAll() // 자유게시판 누구나 접근 가능
-                        .requestMatchers("/api/roles/**").permitAll() // Roles API 누구나 접근 가능
-                        .anyRequest().authenticated() // 나머지 요청은 인증 필요
+                        // 메인 페이지와 로그인하지 않은 사용자도 접근 가능한 페이지
+                        .requestMatchers("/", "/qna", "/qna/{question_id}", "/board", "/board/{post_id}").permitAll()
+
+                        // Q&A 게시판에 답변 작성은 전문가만 가능
+                        .requestMatchers("/qna/{question_id}/answers").hasRole("EXPERT")
+
+                        // Role API 등 관리자가 필요한 요청
+                        .requestMatchers("/api/roles/**").hasRole("ADMIN")
+
+                        // 나머지 요청들은 인증 필요
+                        .anyRequest().authenticated()
                 )
                 .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class); // JWT 필터 추가
 
