@@ -37,10 +37,13 @@ public class SecurityConfig {
                 .sessionManagement(AbstractHttpConfigurer::disable) // 세션 비활성화
                 .authorizeHttpRequests(authorize -> authorize
                         // 메인 페이지와 로그인하지 않은 사용자도 접근 가능한 페이지
-                        .requestMatchers("/", "/qna", "/qna/{question_id}", "/board", "/board/{post_id}", "/signup", "/login", "/api/users/signup", "/api/users/login").permitAll()
+                        .requestMatchers("/", "/qna", "/api/qna/{question_id}", "/board", "/board/{post_id}", "/signup", "/login", "/api/users/signup", "/api/users/login").permitAll()
 
                         // Q&A 게시판에 답변 작성은 전문가만 가능
-                        .requestMatchers(HttpMethod.POST, "/qna/{question_id}/answers").hasRole("EXPERT")
+                        .requestMatchers(HttpMethod.POST, "/api/qna/{question_id}/answers").hasRole("EXPERT")
+
+                        // Q&A 게시판에 답변 조회는 누구나 가능
+                        .requestMatchers(HttpMethod.GET, "/api/qna/{question_id}/answers").permitAll()
 
                         // Role API 등 관리자가 필요한 요청
                         .requestMatchers("/api/roles/**").hasRole("ADMIN")
