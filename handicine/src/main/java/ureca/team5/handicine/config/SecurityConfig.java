@@ -51,6 +51,11 @@ public class SecurityConfig {
                         // 나머지 요청들은 인증 필요
                         .anyRequest().authenticated()
                 )
+                .oauth2Login(oauth2 -> oauth2
+                        .loginPage("/login") // 소셜 로그인 페이지 설정
+                        .defaultSuccessUrl("/") // 로그인 성공 시 리디렉션 URL
+                        .failureUrl("/login?error") // 실패 시 리디렉션 URL
+                )
                 .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class); // JWT 필터 추가
 
         return http.build();
