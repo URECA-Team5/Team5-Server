@@ -1,8 +1,7 @@
 package ureca.team5.handicine.entity;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
@@ -13,6 +12,9 @@ import java.util.Collections;
 @Entity
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @Table(name = "Users")
 public class User {
     @Id
@@ -32,5 +34,10 @@ public class User {
     // 권한 정보를 GrantedAuthority로 변환
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return Collections.singletonList(new SimpleGrantedAuthority(role.getRoleName()));
+    }
+
+    public User update(String username) {
+        this.username = username;
+        return this;
     }
 }
