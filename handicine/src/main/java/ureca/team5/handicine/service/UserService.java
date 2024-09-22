@@ -2,6 +2,7 @@ package ureca.team5.handicine.service;
 
 import ureca.team5.handicine.dto.LoginRequestDTO;
 import ureca.team5.handicine.dto.UserDTO;
+import ureca.team5.handicine.entity.Role;
 import ureca.team5.handicine.entity.User;
 import ureca.team5.handicine.repository.UserRepository;
 import ureca.team5.handicine.repository.RoleRepository;
@@ -60,7 +61,13 @@ public class UserService {
         newUser.setUsername(userDTO.getUsername());
         newUser.setEmail(userDTO.getEmail());
         newUser.setPassword(passwordEncoder.encode(userDTO.getPassword()));
-        newUser.setRole(roleRepository.findByRoleName(userDTO.getRoleName()));
+        Optional<Role> roleOptional = roleRepository.findByRoleName(userDTO.getRoleName());
+        if (roleOptional.isPresent()) {
+            newUser.setRole(roleOptional.get());
+        } else {
+            // Role을 찾지 못했을 때 처리 로직 (예: 예외를 던지거나 기본 역할을 설정)
+            throw new RuntimeException("Role not found: " + userDTO.getRoleName());
+        }
         userRepository.save(newUser);
         return new UserDTO(newUser.getUserId(), newUser.getUsername(), newUser.getEmail(), newUser.getRole().getRoleName(), newUser.getPassword());
     }
@@ -71,7 +78,12 @@ public class UserService {
             User existingUser = userOptional.get();
             existingUser.setUsername(userDTO.getUsername());
             existingUser.setEmail(userDTO.getEmail());
-            existingUser.setRole(roleRepository.findByRoleName(userDTO.getRoleName()));
+            Optional<Role> roleOptional = roleRepository.findByRoleName(userDTO.getRoleName());
+            if (roleOptional.isPresent()) {
+                existingUser.setRole(roleOptional.get());
+            } else {
+                throw new RuntimeException("Role not found: " + userDTO.getRoleName());
+            }
             if (userDTO.getPassword() != null && !userDTO.getPassword().isEmpty()) {
                 existingUser.setPassword(passwordEncoder.encode(userDTO.getPassword())); // 비밀번호 암호화
             }
