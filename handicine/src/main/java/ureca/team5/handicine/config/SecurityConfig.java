@@ -1,7 +1,11 @@
 package ureca.team5.handicine.config;
 
+import org.apache.catalina.filters.CorsFilter;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import ureca.team5.handicine.security.CustomUserDetailsService;
 import ureca.team5.handicine.security.JwtAuthenticationFilter;
 import ureca.team5.handicine.security.JwtTokenProvider;
@@ -16,6 +20,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+import java.util.Arrays;
 
 @Configuration
 @EnableWebSecurity
@@ -51,6 +57,7 @@ public class SecurityConfig {
                         // 나머지 요청들은 인증 필요
                         .anyRequest().authenticated()
                 )
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .oauth2Login(oauth2 -> oauth2
                         .loginPage("/login") // 소셜 로그인 페이지 설정
                         .defaultSuccessUrl("/") // 로그인 성공 시 리디렉션 URL
@@ -71,5 +78,17 @@ public class SecurityConfig {
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000"));
+        configuration.setAllowedMethods(Arrays.asList("*"));
+        configuration.setAllowedHeaders(Arrays.asList("*"));
+        configuration.setAllowCredentials(true); // 인증된 요청 허용
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 }
