@@ -8,6 +8,7 @@ import ureca.team5.handicine.dto.LoginRequestDTO;
 import ureca.team5.handicine.service.UserService;
 
 @RestController
+@CrossOrigin(origins = "http://localhost:3000")
 @RequestMapping("/api/users")
 public class UserController {
 
@@ -17,6 +18,7 @@ public class UserController {
     // 회원가입
     @PostMapping("/signup")
     public ResponseEntity<UserDTO> signup(@RequestBody UserDTO userDTO) {
+    	System.out.println("사인업");
         UserDTO createdUser = userService.createUser(userDTO);
         return ResponseEntity.ok(createdUser);
     }

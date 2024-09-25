@@ -9,6 +9,7 @@ import ureca.team5.handicine.service.PostService;
 import java.util.List;
 
 @RestController
+@CrossOrigin(origins = "http://localhost:3000")
 @RequestMapping("/api/board")
 public class PostController {
 
@@ -25,14 +26,16 @@ public class PostController {
     // 게시글 상세 조회
     @GetMapping("/{post_id}")
     public ResponseEntity<PostDTO> getPostById(@PathVariable Long post_id) {
-        PostDTO post = postService.getPostById(post_id);
+      
+    	PostDTO post = postService.getPostById(post_id);
         return ResponseEntity.ok(post);
     }
 
     // 새 게시글 작성
     @PostMapping
     public ResponseEntity<PostDTO> createPost(@RequestBody PostDTO postDTO) {
-        PostDTO createdPost = postService.createPost(postDTO);
+    	 System.out.println(" ResponseEntity<PostDTO> createPost");
+    	PostDTO createdPost = postService.createPost(postDTO);
         return ResponseEntity.ok(createdPost);
     }
 
