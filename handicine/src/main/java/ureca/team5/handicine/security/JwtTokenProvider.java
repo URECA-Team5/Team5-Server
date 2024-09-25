@@ -31,9 +31,10 @@ public class JwtTokenProvider {
     }
 
     // 토큰 생성
-    public String createToken(String username, String role) {
+    public String createToken(String username, String roleName, Long userId) {
         Claims claims = Jwts.claims().setSubject(username);
-        claims.put("role", role);
+        claims.put("role_name", roleName);
+        claims.put("user_id", userId);
 
         Date now = new Date();
         Date validity = new Date(now.getTime() + 3600000); // 1시간 유효한 토큰
@@ -53,43 +54,88 @@ public class JwtTokenProvider {
 
     // 토큰에서 사용자 이름 추출
     public String getUsername(String token) {
-        // 시크릿 키를 BASE64 디코딩 후 Key 객체로 변환
+        try {
+            // 'Bearer ' 접두사가 포함되어 있다면 제거
+            if (token.startsWith("Bearer ")) {
+                token = token.substring(7);  // 'Bearer ' 뒤의 토큰 부분만 사용
+            }
+
+            // 시크릿 키를 BASE64 디코딩 후 Key 객체로 변환
+            byte[] keyBytes = Decoders.BASE64.decode(SECRET_KEY);
+            Key key = Keys.hmacShaKeyFor(keyBytes);
+
+            // 토큰 파싱 및 클레임 추출
+            Claims claims = Jwts.parserBuilder()
+                    .setSigningKey(key)  // Key 객체 사용
+                    .build()
+                    .parseClaimsJws(token)  // Bearer 접두사가 제거된 토큰을 파싱
+                    .getBody();
+
+            System.out.println("Decoded Claims: " + claims);  // 디코딩된 클레임 출력
+            return claims.getSubject();  // subject에서 사용자 이름 추출
+
+        } catch (Exception e) {
+            System.out.println("Error while decoding JWT: " + e.getMessage());  // 디코딩 오류 출력
+            throw new RuntimeException("Invalid JWT Token", e);
+        }
+    }
+
+    // 토큰에서 user_id 추출
+    public Long getUserId(String token) {
+        Claims claims = parseToken(token);
+        return claims.get("user_id", Long.class);  // user_id를 추출
+    }
+
+    // 토큰 파싱 메서드 추가
+    private Claims parseToken(String token) {
         byte[] keyBytes = Decoders.BASE64.decode(SECRET_KEY);
         Key key = Keys.hmacShaKeyFor(keyBytes);
 
-        // JwtParserBuilder를 사용해 파서 생성 및 서명 키 설정
         return Jwts.parserBuilder()
-                .setSigningKey(key) // Key 객체 사용
-                .build() // 파서 빌드
-                .parseClaimsJws(token) // 토큰 파싱
-                .getBody() // 클레임 추출
-                .getSubject(); // subject에서 사용자 이름 추출
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token.replace("Bearer ", "").trim())  // Bearer 제거
+                .getBody();  // Claims 추출
     }
 
     // 토큰 유효성 검증
     public boolean validateToken(String token) {
         try {
+            System.out.println("Validating Token in validateToken: " + token);  // 검증할 토큰 출력
+
+            // 'Bearer ' 접두사가 포함되어 있다면 제거
+            if (token.startsWith("Bearer ")) {
+                token = token.substring(7);  // 'Bearer ' 뒤의 토큰 부분만 사용
+            }
+
             // 시크릿 키를 BASE64 디코딩 후 Key 객체로 변환
             byte[] keyBytes = Decoders.BASE64.decode(SECRET_KEY);
             Key key = Keys.hmacShaKeyFor(keyBytes);
 
             // JwtParserBuilder를 사용하여 토큰 유효성 검사
-            Jwts.parserBuilder()
-                    .setSigningKey(key) // Key 객체 사용
-                    .build() // 파서 빌드
-                    .parseClaimsJws(token); // 토큰 파싱 및 유효성 검증
+            Claims claims = Jwts.parserBuilder()
+                    .setSigningKey(key)
+                    .build()
+                    .parseClaimsJws(token)  // Bearer 접두사가 제거된 토큰을 파싱
+                    .getBody();
 
-            return true; // 유효한 경우 true 반환
+            System.out.println("Validated Claims: " + claims);  // 파싱된 클레임 출력
+            return true;  // 유효한 경우 true 반환
+
         } catch (Exception e) {
-            return false; // 예외 발생 시 false 반환
+            System.out.println("Token validation failed: " + e.getMessage());  // 예외 발생 시 오류 메시지 출력
+            return false;
         }
     }
 
     // 요청에서 JWT 토큰을 추출하는 메서드 (resolveToken)
     public String resolveToken(HttpServletRequest request) {
         String bearerToken = request.getHeader("Authorization");
+        System.out.println("Raw Authorization Header: " + bearerToken);  // Authorization 헤더 로그 출력
         if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
-            return bearerToken.substring(7); // "Bearer " 부분을 제거하고 토큰 반환
+            String token = bearerToken.substring(7);
+            System.out.println("Extracted Token: " + token);  // 추출된 토큰 출력
+            return token;
         }
         return null;
     }

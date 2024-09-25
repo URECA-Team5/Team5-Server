@@ -10,6 +10,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/qna")
+@CrossOrigin("*")
 public class AnswerController {
 
     @Autowired
