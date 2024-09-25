@@ -9,7 +9,6 @@ import ureca.team5.handicine.service.CommentService;
 import java.util.List;
 
 @RestController
-@CrossOrigin("*")
 @RequestMapping("/api/board/{post_id}/comments")
 public class CommentController {
 
@@ -26,8 +25,6 @@ public class CommentController {
     // 댓글 작성
     @PostMapping
     public ResponseEntity<CommentDTO> createComment(@PathVariable Long post_id, @RequestBody CommentDTO commentDTO) {
-       System.out.println("댓글 작성하고싶어요..");
-      System.out.println("post_id : "+post_id+"\n"+commentDTO.getAuthorUsername());
     	CommentDTO createdComment = commentService.createComment(post_id, commentDTO);
         return ResponseEntity.ok(createdComment);
     }

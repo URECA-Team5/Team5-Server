@@ -9,7 +9,6 @@ import ureca.team5.handicine.service.AnswerService;
 import java.util.List;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:3000")
 @RequestMapping("/api/qna")
 public class AnswerController {
 
@@ -19,7 +18,6 @@ public class AnswerController {
     // 특정 질문글의 모든 답변 조회
     @GetMapping("/{question_id}/answers")
     public ResponseEntity<List<AnswerDTO>> getAllAnswersForQuestion(@PathVariable Long question_id) {
-    	System.out.println("getAllAnswersForQuestion");
         List<AnswerDTO> answers = answerService.getAnswersByQuestionId(question_id);
         return ResponseEntity.ok(answers);
     }
@@ -27,7 +25,6 @@ public class AnswerController {
     // 답변 작성
     @PostMapping("/{question_id}/answers")
     public ResponseEntity<AnswerDTO> createAnswer(@PathVariable Long question_id, @RequestBody AnswerDTO answerDTO) {
-       System.out.println("createAnswer");
     	AnswerDTO createdAnswer = answerService.createAnswer(question_id, answerDTO);
         return ResponseEntity.ok(createdAnswer);
     }
