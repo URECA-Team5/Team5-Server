@@ -30,6 +30,7 @@ public class PostService {
     }
 
     public PostDTO createPost(PostDTO postDTO) {
+    	System.out.println("PostDTO createPost");
         Post post = new Post();
         post.setTitle(postDTO.getTitle());
         post.setContent(postDTO.getContent());
