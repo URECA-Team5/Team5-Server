@@ -5,14 +5,19 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ureca.team5.handicine.dto.UserDTO;
 import ureca.team5.handicine.dto.LoginRequestDTO;
+import ureca.team5.handicine.security.JwtTokenProvider;
 import ureca.team5.handicine.service.UserService;
 
 @RestController
 @RequestMapping("/api/users")
+@CrossOrigin("*")
 public class UserController {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private JwtTokenProvider jwtTokenProvider;
 
     // 회원가입
     @PostMapping("/signup")
@@ -36,16 +41,18 @@ public class UserController {
     }
 
     // 마이페이지 조회
-    @GetMapping("/profile/{user_id}")
-    public ResponseEntity<UserDTO> getUserProfile(@PathVariable Long user_id) {
-        UserDTO userProfile = userService.getUserById(user_id);
+    @GetMapping("/profile")
+    public ResponseEntity<UserDTO> getUserProfile(@RequestHeader("Authorization") String token) {
+        String username = jwtTokenProvider.getUsername(token);
+        UserDTO userProfile = userService.getUserByUsername(username);
         return ResponseEntity.ok(userProfile);
     }
 
     // 마이페이지 수정
-    @PatchMapping("/profile/{user_id}")
-    public ResponseEntity<UserDTO> updateUserProfile(@PathVariable Long user_id, @RequestBody UserDTO userDTO) {
-        UserDTO updatedUser = userService.updateUser(user_id, userDTO);
+    @PatchMapping("/profile")
+    public ResponseEntity<UserDTO> updateUserProfile(@RequestHeader("Authorization") String token, @RequestBody UserDTO userDTO) {
+        String username = jwtTokenProvider.getUsername(token);
+        UserDTO updatedUser = userService.updateUserByUsername(username, userDTO);
         return ResponseEntity.ok(updatedUser);
     }
 

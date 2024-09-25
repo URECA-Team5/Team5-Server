@@ -1,9 +1,12 @@
 package ureca.team5.handicine.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class UserDTO {
     private Long id;
     private String username;
     private String email;
+    @JsonProperty("role_name")
     private String roleName;
     private String password;
 
