@@ -68,18 +68,36 @@ public class UserService {
     }
 
     public UserDTO createUser(UserDTO userDTO) {
+        // 새로운 사용자 생성
         User newUser = new User();
         newUser.setUsername(userDTO.getUsername());
         newUser.setEmail(userDTO.getEmail());
-        newUser.setPassword(passwordEncoder.encode(userDTO.getPassword()));
-        Optional<Role> roleOptional = roleRepository.findByRoleName(userDTO.getRoleName());
+
+        // 비밀번호 설정
+        if (userDTO.getPassword() != null && !userDTO.getPassword().isEmpty()) {
+            newUser.setPassword(passwordEncoder.encode(userDTO.getPassword()));
+        } else {
+            throw new RuntimeException("Password cannot be null or empty");
+        }
+
+        // 역할 설정
+        String roleName = userDTO.getRoleName();
+        if (roleName == null || roleName.isEmpty()) {
+            roleName = "MEMBER";
+            System.out.println("Role name is null or empty. Assigning default role: " + roleName);
+        }
+
+        Optional<Role> roleOptional = roleRepository.findByRoleName(roleName);
         if (roleOptional.isPresent()) {
             newUser.setRole(roleOptional.get());
         } else {
-            // Role을 찾지 못했을 때 처리 로직 (예: 예외를 던지거나 기본 역할을 설정)
-            throw new RuntimeException("Role not found: " + userDTO.getRoleName());
+            throw new RuntimeException("Role not found: " + roleName);
         }
+
+        // 사용자 저장
         userRepository.save(newUser);
+
+        // 생성된 사용자 정보를 DTO로 반환
         return new UserDTO(newUser.getUserId(), newUser.getUsername(), newUser.getEmail(), newUser.getRole().getRoleName(), newUser.getPassword());
     }
 
