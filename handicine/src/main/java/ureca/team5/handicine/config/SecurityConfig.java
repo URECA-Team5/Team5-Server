@@ -1,5 +1,4 @@
 package ureca.team5.handicine.config;
-
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import ureca.team5.handicine.security.CustomUserDetailsService;
@@ -16,38 +15,49 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
+import jakarta.servlet.http.HttpServletResponse;
+import java.util.Arrays;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
-
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
-
     @Autowired
     private CustomUserDetailsService customUserDetailsService;
-
+    // CORS 필터 설정
+    @Bean
+    public CorsFilter corsFilter() {
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowCredentials(true);
+        config.setAllowedOrigins(Arrays.asList("http://localhost:3000")); // React 앱의 URL
+        config.setAllowedHeaders(Arrays.asList("*"));
+        config.setAllowedMethods(Arrays.asList("*")); // 모든 HTTP 메서드 허용
+        source.registerCorsConfiguration("/**", config);
+        return new CorsFilter(source);
+    }
     // 최신 SecurityFilterChain 방식
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+                .cors() // CORS 설정 추가
+                .and()
                 .csrf(AbstractHttpConfigurer::disable) // CSRF 비활성화
                 .formLogin(AbstractHttpConfigurer::disable) // Form 로그인 비활성화
                 .httpBasic(AbstractHttpConfigurer::disable) // HTTP Basic 인증 비활성화
                 .sessionManagement(AbstractHttpConfigurer::disable) // 세션 비활성화
                 .authorizeHttpRequests(authorize -> authorize
                         // 메인 페이지와 로그인하지 않은 사용자도 접근 가능한 페이지
-                        .requestMatchers("/", "/api/qna","/api/medicines/search", "/api/qna/{question_id}", "/api/board", "/api/board/{post_id}", "/api/users/signup", "api/users/login").permitAll()
-
+                        .requestMatchers("/", "/api/qna","/api/medicines/search", "/api/qna/{question_id}", "/api/board", "/api/board/{post_id}", "/api/users/signup", "/api/users/login").permitAll()
                         // Q&A 게시판에 답변 작성은 전문가만 가능
                         .requestMatchers(HttpMethod.POST, "/api/qna/{question_id}/answers").hasRole("EXPERT")
-
                         // Q&A 게시판에 답변 조회는 누구나 가능
                         .requestMatchers(HttpMethod.GET, "/api/qna/{question_id}/answers").permitAll()
-
                         // Role API 등 관리자가 필요한 요청
                         .requestMatchers("/api/roles/**").hasRole("ADMIN")
-
                         // 나머지 요청들은 인증 필요
                         .anyRequest().authenticated()
                 )
@@ -56,20 +66,47 @@ public class SecurityConfig {
                         .defaultSuccessUrl("/") // 로그인 성공 시 리디렉션 URL
                         .failureUrl("/login?error") // 실패 시 리디렉션 URL
                 )
+                .exceptionHandling(exception -> exception
+                    .authenticationEntryPoint((request, response, authException) -> {
+                        response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
+                    })
+                )
                 .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class); // JWT 필터 추가
-
         return http.build();
     }
-
     // 비밀번호 암호화를 위한 PasswordEncoder 설정
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-
     // AuthenticationManager 설정
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
