@@ -9,7 +9,6 @@ import ureca.team5.handicine.service.QuestionService;
 import java.util.List;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:3000")
 @RequestMapping("/api/qna")
 public class QuestionController {
 
