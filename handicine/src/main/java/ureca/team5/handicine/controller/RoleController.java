@@ -31,14 +31,14 @@ public class RoleController {
 
     // 특정 role 수정
     @PatchMapping("/{role_id}")
-    public ResponseEntity<RoleDTO> updateRole(@PathVariable Long role_id, @RequestBody RoleDTO roleDTO) {
+    public ResponseEntity<RoleDTO> updateRole(@PathVariable("role_id") Long role_id, @RequestBody RoleDTO roleDTO) {
         RoleDTO updatedRole = roleService.updateRole(role_id, roleDTO);
         return ResponseEntity.ok(updatedRole);
     }
 
     // 특정 role 삭제
     @DeleteMapping("/{role_id}")
-    public ResponseEntity<Void> deleteRole(@PathVariable Long role_id) {
+    public ResponseEntity<Void> deleteRole(@PathVariable("role_id") Long role_id) {
         roleService.deleteRole(role_id);
         return ResponseEntity.noContent().build();
     }
