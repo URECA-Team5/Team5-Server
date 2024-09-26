@@ -1,4 +1,5 @@
 package ureca.team5.handicine.config;
+
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import ureca.team5.handicine.security.CustomUserDetailsService;
@@ -15,36 +16,21 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.filter.CorsFilter;
-import jakarta.servlet.http.HttpServletResponse;
-import java.util.Arrays;
+
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
+
     @Autowired
     private CustomUserDetailsService customUserDetailsService;
-    // CORS 필터 설정
-    @Bean
-    public CorsFilter corsFilter() {
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        CorsConfiguration config = new CorsConfiguration();
-        config.setAllowCredentials(true);
-        config.setAllowedOrigins(Arrays.asList("http://localhost:3000")); // React 앱의 URL
-        config.setAllowedHeaders(Arrays.asList("*"));
-        config.setAllowedMethods(Arrays.asList("*")); // 모든 HTTP 메서드 허용
-        source.registerCorsConfiguration("/**", config);
-        return new CorsFilter(source);
-    }
+
     // 최신 SecurityFilterChain 방식
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .cors() // CORS 설정 추가
-                .and()
                 .csrf(AbstractHttpConfigurer::disable) // CSRF 비활성화
                 .formLogin(AbstractHttpConfigurer::disable) // Form 로그인 비활성화
                 .httpBasic(AbstractHttpConfigurer::disable) // HTTP Basic 인증 비활성화
@@ -66,11 +52,6 @@ public class SecurityConfig {
                         .defaultSuccessUrl("/") // 로그인 성공 시 리디렉션 URL
                         .failureUrl("/login?error") // 실패 시 리디렉션 URL
                 )
-                .exceptionHandling(exception -> exception
-                    .authenticationEntryPoint((request, response, authException) -> {
-                        response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
-                    })
-                )
                 .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class); // JWT 필터 추가
         return http.build();
     }
@@ -79,34 +60,10 @@ public class SecurityConfig {
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
+
     // AuthenticationManager 설정
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

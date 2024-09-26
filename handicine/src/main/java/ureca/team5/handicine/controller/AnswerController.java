@@ -9,7 +9,6 @@ import ureca.team5.handicine.service.AnswerService;
 import java.util.List;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:3000")
 @RequestMapping("/api/qna")
 public class AnswerController {
 
@@ -18,30 +17,28 @@ public class AnswerController {
 
     // 특정 질문글의 모든 답변 조회
     @GetMapping("/{question_id}/answers")
-    public ResponseEntity<List<AnswerDTO>> getAllAnswersForQuestion(@PathVariable Long question_id) {
-    	System.out.println("getAllAnswersForQuestion");
+    public ResponseEntity<List<AnswerDTO>> getAllAnswersForQuestion(@PathVariable("question_id") Long question_id) {
         List<AnswerDTO> answers = answerService.getAnswersByQuestionId(question_id);
         return ResponseEntity.ok(answers);
     }
 
     // 답변 작성
     @PostMapping("/{question_id}/answers")
-    public ResponseEntity<AnswerDTO> createAnswer(@PathVariable Long question_id, @RequestBody AnswerDTO answerDTO) {
-       System.out.println("createAnswer");
+    public ResponseEntity<AnswerDTO> createAnswer(@PathVariable("question_id") Long question_id, @RequestBody AnswerDTO answerDTO) {
     	AnswerDTO createdAnswer = answerService.createAnswer(question_id, answerDTO);
         return ResponseEntity.ok(createdAnswer);
     }
 
     // 답변 수정
     @PatchMapping("/answers/{answer_id}")
-    public ResponseEntity<AnswerDTO> updateAnswer(@PathVariable Long answer_id, @RequestBody AnswerDTO answerDTO) {
+    public ResponseEntity<AnswerDTO> updateAnswer(@PathVariable("answer_id") Long answer_id, @RequestBody AnswerDTO answerDTO) {
         AnswerDTO updatedAnswer = answerService.updateAnswer(answer_id, answerDTO);
         return ResponseEntity.ok(updatedAnswer);
     }
 
     // 답변 삭제
     @DeleteMapping("/answers/{answer_id}")
-    public ResponseEntity<Void> deleteAnswer(@PathVariable Long answer_id) {
+    public ResponseEntity<Void> deleteAnswer(@PathVariable("answer_id") Long answer_id) {
         answerService.deleteAnswer(answer_id);
         return ResponseEntity.noContent().build();
     }

@@ -9,7 +9,6 @@ import ureca.team5.handicine.service.QuestionService;
 import java.util.List;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:3000")
 @RequestMapping("/api/qna")
 public class QuestionController {
 
@@ -25,7 +24,7 @@ public class QuestionController {
 
     // 질문글 상세조회
     @GetMapping("/{question_id}")
-    public ResponseEntity<QuestionDTO> getQuestionById(@PathVariable Long question_id) {
+    public ResponseEntity<QuestionDTO> getQuestionById(@PathVariable("question_id") Long question_id) {
         QuestionDTO question = questionService.getQuestionById(question_id);
         return ResponseEntity.ok(question);
     }
@@ -39,14 +38,14 @@ public class QuestionController {
 
     // 질문글 수정
     @PatchMapping("/{question_id}")
-    public ResponseEntity<QuestionDTO> updateQuestion(@PathVariable Long question_id, @RequestBody QuestionDTO questionDTO) {
+    public ResponseEntity<QuestionDTO> updateQuestion(@PathVariable("question_id") Long question_id, @RequestBody QuestionDTO questionDTO) {
         QuestionDTO updatedQuestion = questionService.updateQuestion(question_id, questionDTO);
         return ResponseEntity.ok(updatedQuestion);
     }
 
     // 질문글 삭제
     @DeleteMapping("/{question_id}")
-    public ResponseEntity<Void> deleteQuestion(@PathVariable Long question_id) {
+    public ResponseEntity<Void> deleteQuestion(@PathVariable("question_id") Long question_id) {
         questionService.deleteQuestion(question_id);
         return ResponseEntity.noContent().build();
     }
