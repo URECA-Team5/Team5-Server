@@ -24,7 +24,7 @@ public class PostController {
 
     // 게시글 상세 조회
     @GetMapping("/{post_id}")
-    public ResponseEntity<PostDTO> getPostById(@PathVariable Long post_id) {
+    public ResponseEntity<PostDTO> getPostById(@PathVariable("post_id") Long post_id) {
     	PostDTO post = postService.getPostById(post_id);
         return ResponseEntity.ok(post);
     }
@@ -38,14 +38,14 @@ public class PostController {
 
     // 게시글 수정
     @PatchMapping("/{post_id}")
-    public ResponseEntity<PostDTO> updatePost(@PathVariable Long post_id, @RequestBody PostDTO postDTO) {
+    public ResponseEntity<PostDTO> updatePost(@PathVariable("post_id") Long post_id, @RequestBody PostDTO postDTO) {
         PostDTO updatedPost = postService.updatePost(post_id, postDTO);
         return ResponseEntity.ok(updatedPost);
     }
 
     // 게시글 삭제
     @DeleteMapping("/{post_id}")
-    public ResponseEntity<Void> deletePost(@PathVariable Long post_id) {
+    public ResponseEntity<Void> deletePost(@PathVariable("post_id") Long post_id) {
         postService.deletePost(post_id);
         return ResponseEntity.noContent().build();
     }
