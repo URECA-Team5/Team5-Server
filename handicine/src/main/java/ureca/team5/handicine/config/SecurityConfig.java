@@ -38,12 +38,16 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorize -> authorize
                         // 메인 페이지와 로그인하지 않은 사용자도 접근 가능한 페이지
                         .requestMatchers("/", "/api/qna","/api/medicines/search", "/api/qna/{question_id}", "/api/board", "/api/board/{post_id}", "/api/users/signup", "/api/users/login").permitAll()
+
                         // Q&A 게시판에 답변 작성은 전문가만 가능
                         .requestMatchers(HttpMethod.POST, "/api/qna/{question_id}/answers").hasRole("EXPERT")
+
                         // Q&A 게시판에 답변 조회는 누구나 가능
                         .requestMatchers(HttpMethod.GET, "/api/qna/{question_id}/answers").permitAll()
+
                         // Role API 등 관리자가 필요한 요청
                         .requestMatchers("/api/roles/**").hasRole("ADMIN")
+
                         // 나머지 요청들은 인증 필요
                         .anyRequest().authenticated()
                 )
@@ -53,8 +57,10 @@ public class SecurityConfig {
                         .failureUrl("/login?error") // 실패 시 리디렉션 URL
                 )
                 .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class); // JWT 필터 추가
+
         return http.build();
     }
+
     // 비밀번호 암호화를 위한 PasswordEncoder 설정
     @Bean
     public PasswordEncoder passwordEncoder() {
