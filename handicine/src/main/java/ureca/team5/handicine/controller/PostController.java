@@ -33,20 +33,20 @@ public class PostController {
     // 새 게시글 작성
     @PostMapping
     public ResponseEntity<PostDTO> createPost(@RequestBody PostDTO postDTO) {
-        PostDTO createdPost = postService.createPost(postDTO);
+    	PostDTO createdPost = postService.createPost(postDTO);
         return ResponseEntity.ok(createdPost);
     }
 
     // 게시글 수정
     @PatchMapping("/{post_id}")
-    public ResponseEntity<PostDTO> updatePost(@PathVariable Long post_id, @RequestBody PostDTO postDTO) {
+    public ResponseEntity<PostDTO> updatePost(@PathVariable("post_id") Long post_id, @RequestBody PostDTO postDTO) {
         PostDTO updatedPost = postService.updatePost(post_id, postDTO);
         return ResponseEntity.ok(updatedPost);
     }
 
     // 게시글 삭제
     @DeleteMapping("/{post_id}")
-    public ResponseEntity<Void> deletePost(@PathVariable Long post_id) {
+    public ResponseEntity<Void> deletePost(@PathVariable("post_id") Long post_id) {
         postService.deletePost(post_id);
         return ResponseEntity.noContent().build();
     }
