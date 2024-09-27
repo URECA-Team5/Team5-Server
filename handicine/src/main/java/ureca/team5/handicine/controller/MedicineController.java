@@ -30,7 +30,7 @@ public class MedicineController {
 
 
  @GetMapping("/search")
- public List<Medicine> search(@RequestParam String itemName) {
+ public List<Medicine> search(@RequestParam("itemName") String itemName) {
 //     String info = pharmacyService.getPharmacyInfo(itemName);
 	 System.out.println("search : 요기 들어옴");
 	return medicineService.getMedicineInfo(itemName);
