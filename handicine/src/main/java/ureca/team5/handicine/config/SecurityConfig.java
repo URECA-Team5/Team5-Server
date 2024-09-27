@@ -1,12 +1,10 @@
 package ureca.team5.handicine.config;
 
-import org.apache.catalina.filters.CorsFilter;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import ureca.team5.handicine.security.CustomUserDetailsService;
 import ureca.team5.handicine.security.JwtAuthenticationFilter;
 import ureca.team5.handicine.security.JwtTokenProvider;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +18,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import ureca.team5.handicine.security.OAuth2AuthenticationSuccessHandler;
 
 import java.util.Arrays;
 
@@ -27,11 +26,14 @@ import java.util.Arrays;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    @Autowired
-    private JwtTokenProvider jwtTokenProvider;
+    private final JwtTokenProvider jwtTokenProvider;
+    private final OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
 
     @Autowired
-    private CustomUserDetailsService customUserDetailsService;
+    public SecurityConfig(JwtTokenProvider jwtTokenProvider, OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler) {
+        this.jwtTokenProvider = jwtTokenProvider;
+        this.oAuth2AuthenticationSuccessHandler = oAuth2AuthenticationSuccessHandler;
+    }
 
     // 최신 SecurityFilterChain 방식
     @Bean
@@ -43,7 +45,7 @@ public class SecurityConfig {
                 .sessionManagement(AbstractHttpConfigurer::disable) // 세션 비활성화
                 .authorizeHttpRequests(authorize -> authorize
                         // 메인 페이지와 로그인하지 않은 사용자도 접근 가능한 페이지
-                        .requestMatchers("/", "/api/qna", "/api/qna/{question_id}", "/api/medicines/search", "/api/board", "/api/board/{post_id}", "/api/users/signup", "api/users/login").permitAll()
+                        .requestMatchers("/", "/api/qna", "/api/qna/{question_id}", "/api/medicines/search", "/api/board", "/api/board/{post_id}", "/api/users/signup", "/api/users/login", "/login", "/oauth2/**").permitAll()
 
                         // Q&A 게시판에 답변 작성은 전문가만 가능
                         .requestMatchers(HttpMethod.POST, "/api/qna/{question_id}/answers").hasRole("EXPERT")
@@ -58,9 +60,10 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+
                 .oauth2Login(oauth2 -> oauth2
                         .loginPage("/login") // 소셜 로그인 페이지 설정
-                        .defaultSuccessUrl("/") // 로그인 성공 시 리디렉션 URL
+                        .successHandler(oAuth2AuthenticationSuccessHandler)
                         .failureUrl("/login?error") // 실패 시 리디렉션 URL
                 )
                 .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class); // JWT 필터 추가

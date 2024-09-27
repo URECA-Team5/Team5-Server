@@ -45,9 +45,16 @@ public class OAuthAttributes {
         Map<String, Object> kakaoAccount = (Map<String, Object>) attributes.get("kakao_account");
         Map<String, Object> profile = (Map<String, Object>) kakaoAccount.get("profile");
 
+        // 이메일이 없을 경우 처리
+        String email = (String) kakaoAccount.get("email");
+        if (email == null || email.isEmpty()) {
+            email = profile.get("nickname") + "@kakao.com";  // 임시 이메일 할당
+            System.out.println("Email is null or empty. Assigning default email: " + email);
+        }
+
         return OAuthAttributes.builder()
                 .name((String) profile.get("nickname"))
-                .email((String) kakaoAccount.get("email"))
+                .email(email)
                 .attributes(attributes)
                 .nameAttributeKey("id")
                 .build();

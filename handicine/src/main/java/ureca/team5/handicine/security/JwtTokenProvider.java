@@ -137,6 +137,7 @@ public class JwtTokenProvider {
             System.out.println("Extracted Token: " + token);  // 추출된 토큰 출력
             return token;
         }
+        System.out.println("No Authorization header present");
         return null;
     }
 
