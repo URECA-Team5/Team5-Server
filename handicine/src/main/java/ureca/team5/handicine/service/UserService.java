@@ -46,16 +46,6 @@ public class UserService {
         // 토큰 무효화 기능이 필요할 경우 Redis 등을 활용하여 블랙리스트 방식으로 구현할 수 있음
     }
 
-    public UserDTO getUserById(Long id) {
-        Optional<User> user = userRepository.findById(id);
-        if (user.isPresent()) {
-            User foundUser = user.get();
-            return new UserDTO(foundUser.getUserId(), foundUser.getUsername(), foundUser.getEmail(), foundUser.getRole().getRoleName());
-        } else {
-            throw new RuntimeException("User not found.");
-        }
-    }
-
     // username을 사용하여 사용자 정보 조회
     public UserDTO getUserByUsername(String username) {
         Optional<User> user = userRepository.findByUsername(username);
@@ -71,7 +61,14 @@ public class UserService {
         // 새로운 사용자 생성
         User newUser = new User();
         newUser.setUsername(userDTO.getUsername());
-        newUser.setEmail(userDTO.getEmail());
+
+        // 이메일이 null이거나 빈 문자열인 경우 기본 이메일 할당
+        if (userDTO.getEmail() == null || userDTO.getEmail().isEmpty()) {
+            newUser.setEmail(userDTO.getUsername() + "@handicine.com");  // 임시 이메일 설정
+            System.out.println("Email is null or empty. Assigning default email: " + newUser.getEmail());
+        } else {
+            newUser.setEmail(userDTO.getEmail());
+        }
 
         // 비밀번호 설정
         if (userDTO.getPassword() != null && !userDTO.getPassword().isEmpty()) {
@@ -83,7 +80,7 @@ public class UserService {
         // 역할 설정
         String roleName = userDTO.getRoleName();
         if (roleName == null || roleName.isEmpty()) {
-            roleName = "MEMBER";
+            roleName = "MEMBER";  // 기본 역할 설정
             System.out.println("Role name is null or empty. Assigning default role: " + roleName);
         }
 
@@ -101,27 +98,52 @@ public class UserService {
         return new UserDTO(newUser.getUserId(), newUser.getUsername(), newUser.getEmail(), newUser.getRole().getRoleName(), newUser.getPassword());
     }
 
-    public UserDTO updateUser(Long id, UserDTO userDTO) {
-        Optional<User> userOptional = userRepository.findById(id);
-        if (userOptional.isPresent()) {
-            User existingUser = userOptional.get();
-            existingUser.setUsername(userDTO.getUsername());
-            existingUser.setEmail(userDTO.getEmail());
-            Optional<Role> roleOptional = roleRepository.findByRoleName(userDTO.getRoleName());
-            if (roleOptional.isPresent()) {
-                existingUser.setRole(roleOptional.get());
-            } else {
-                throw new RuntimeException("Role not found: " + userDTO.getRoleName());
-            }
-            if (userDTO.getPassword() != null && !userDTO.getPassword().isEmpty()) {
-                existingUser.setPassword(passwordEncoder.encode(userDTO.getPassword())); // 비밀번호 암호화
-            }
-            userRepository.save(existingUser);
-
-            return new UserDTO(existingUser.getUserId(), existingUser.getUsername(), existingUser.getEmail(), existingUser.getRole().getRoleName(), existingUser.getPassword());
-        } else {
-            throw new RuntimeException("User not found.");
+    public UserDTO saveSocialUser(String username, String email) {
+        // 기존 사용자 검색
+        Optional<User> existingUser = userRepository.findByUsername(username);
+        if (existingUser.isPresent()) {
+            return convertToDTO(existingUser.get()); // 기존 사용자가 있으면 해당 사용자 반환
         }
+
+        // 새로운 사용자 생성
+        User newUser = new User();
+        newUser.setUsername(username);  // 카카오에서 가져온 닉네임
+        newUser.setEmail(email != null ? email : "no-email@" + username + ".kakao.com"); // 이메일이 없으면 대체 이메일 설정
+
+        // 기본 역할 설정
+        Role role = roleRepository.findByRoleName("MEMBER").orElseThrow(() -> new RuntimeException("Role not found: MEMBER"));
+        newUser.setRole(role);
+
+        // 사용자 저장
+        User savedUser = userRepository.save(newUser);
+
+        // 저장된 사용자 엔티티를 DTO로 변환 후 반환
+        return convertToDTO(savedUser);
+    }
+
+    // 엔티티 -> DTO 변환 메서드
+    private UserDTO convertToDTO(User user) {
+        return new UserDTO(
+                user.getUserId(),
+                user.getUsername(),
+                user.getEmail(),
+                user.getRole().getRoleName()
+        );
+    }
+
+    // DTO -> 엔티티 변환 메서드 (필요할 경우 추가)
+    private User convertToEntity(UserDTO userDTO) {
+        User user = new User();
+        user.setUsername(userDTO.getUsername());
+        user.setEmail(userDTO.getEmail());
+
+        if (userDTO.getRoleName() != null) {
+            Role role = roleRepository.findByRoleName(userDTO.getRoleName())
+                    .orElseThrow(() -> new RuntimeException("Role not found: " + userDTO.getRoleName()));
+            user.setRole(role);
+        }
+
+        return user;
     }
 
     // username을 사용하여 사용자 정보 수정
