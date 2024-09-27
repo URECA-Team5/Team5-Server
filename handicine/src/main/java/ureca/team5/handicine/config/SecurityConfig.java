@@ -60,11 +60,9 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-
                 .oauth2Login(oauth2 -> oauth2
-                        .loginPage("/login") // 소셜 로그인 페이지 설정
-                        .successHandler(oAuth2AuthenticationSuccessHandler)
-                        .failureUrl("/login?error") // 실패 시 리디렉션 URL
+                        .successHandler(oAuth2AuthenticationSuccessHandler) // 소셜 로그인 성공 시 처리
+                        .failureUrl("/login?error") // 로그인 실패 시 리디렉션 URL
                 )
                 .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class); // JWT 필터 추가
 
