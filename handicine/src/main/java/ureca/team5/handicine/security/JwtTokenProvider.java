@@ -80,12 +80,6 @@ public class JwtTokenProvider {
         }
     }
 
-    // 토큰에서 user_id 추출
-    public Long getUserId(String token) {
-        Claims claims = parseToken(token);
-        return claims.get("user_id", Long.class);  // user_id를 추출
-    }
-
     // 토큰 파싱 메서드 추가
     private Claims parseToken(String token) {
         byte[] keyBytes = Decoders.BASE64.decode(SECRET_KEY);
