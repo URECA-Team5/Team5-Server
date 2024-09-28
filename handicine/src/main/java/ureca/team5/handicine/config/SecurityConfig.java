@@ -19,6 +19,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import ureca.team5.handicine.security.OAuth2AuthenticationSuccessHandler;
+import ureca.team5.handicine.service.CustomOAuth2UserService;
 
 import java.util.Arrays;
 
@@ -28,11 +29,15 @@ public class SecurityConfig {
 
     private final JwtTokenProvider jwtTokenProvider;
     private final OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
+    private final CustomOAuth2UserService customOAuth2UserService;
 
     @Autowired
-    public SecurityConfig(JwtTokenProvider jwtTokenProvider, OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler) {
+    public SecurityConfig(JwtTokenProvider jwtTokenProvider,
+                          OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler,
+                          CustomOAuth2UserService customOAuth2UserService) {
         this.jwtTokenProvider = jwtTokenProvider;
         this.oAuth2AuthenticationSuccessHandler = oAuth2AuthenticationSuccessHandler;
+        this.customOAuth2UserService = customOAuth2UserService;
     }
 
     // 최신 SecurityFilterChain 방식
@@ -40,7 +45,10 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable) // CSRF 비활성화
-                .formLogin(AbstractHttpConfigurer::disable) // Form 로그인 비활성화
+                .formLogin(form -> form
+                        .loginPage("/login")  // Define custom login page for local login
+                        .permitAll()           // Allow all users to access the login page
+                )
                 .httpBasic(AbstractHttpConfigurer::disable) // HTTP Basic 인증 비활성화
                 .sessionManagement(AbstractHttpConfigurer::disable) // 세션 비활성화
                 .authorizeHttpRequests(authorize -> authorize
@@ -59,10 +67,16 @@ public class SecurityConfig {
                         // 나머지 요청들은 인증 필요
                         .anyRequest().authenticated()
                 )
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .cors(cors -> cors.configurationSource(corsConfigurationSource())) // CORS 설정
                 .oauth2Login(oauth2 -> oauth2
-                        .successHandler(oAuth2AuthenticationSuccessHandler) // 소셜 로그인 성공 시 처리
-                        .failureUrl("/login?error") // 로그인 실패 시 리디렉션 URL
+                        .userInfoEndpoint(userInfo -> userInfo
+                                .userService(customOAuth2UserService)) // 사용자 정보를 처리하는 서비스 등록
+                        .successHandler(oAuth2AuthenticationSuccessHandler) // OAuth2 로그인 성공 시 처리
+                        .failureHandler((request, response, exception) -> {
+                            System.out.println("OAuth2 login failed: " + exception.getMessage());
+                            exception.printStackTrace();  // 예외 전체를 출력해서 원인 확인
+                            response.sendRedirect("/login?error");  // 로그인 실패 시 리디렉션 처리
+                        })
                 )
                 .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class); // JWT 필터 추가
 
