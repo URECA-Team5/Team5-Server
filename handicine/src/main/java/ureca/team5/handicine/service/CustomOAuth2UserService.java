@@ -24,27 +24,41 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     private UserRepository userRepository;
 
     @Autowired
-    private RoleRepository RoleRepository;
+    private RoleRepository roleRepository;
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
+        System.out.println("CustomOAuth2UserService loadUser 호출됨");
         OAuth2User oAuth2User = super.loadUser(userRequest);
-        String registrationId = userRequest.getClientRegistration().getRegistrationId(); // Kakao or Google
+
+        String registrationId = userRequest.getClientRegistration().getRegistrationId(); // Identify provider (Kakao or Google)
         String userNameAttributeName = userRequest.getClientRegistration()
                 .getProviderDetails().getUserInfoEndpoint().getUserNameAttributeName();
 
+        // Log the received user attributes for debugging
+        System.out.println("OAuth2 User Attributes: " + oAuth2User.getAttributes());
+
         OAuthAttributes attributes = OAuthAttributes.of(registrationId, userNameAttributeName, oAuth2User.getAttributes());
 
-        User user = saveOrUpdate(attributes);
+        User user = saveOrUpdate(attributes);  // Save or update user info in DB
+
         return new DefaultOAuth2User(Collections.singleton(new SimpleGrantedAuthority(user.getRole().getRoleName())),
                 attributes.getAttributes(), attributes.getNameAttributeKey());
     }
 
     private User saveOrUpdate(OAuthAttributes attributes) {
-        Optional<Role> defaultRole = RoleRepository.findByRoleName("MEMBER");
+        Optional<Role> defaultRole = roleRepository.findByRoleName("MEMBER");
+
+        // Log to verify which attributes are being processed
+        System.out.println("Processing user: " + attributes.getName());
+
         User user = userRepository.findByUsername(attributes.getName())
-                .map(entity -> entity.update(attributes.getName()))
+                .map(entity -> entity.update(attributes.getName(), attributes.getEmail()))
                 .orElse(attributes.toEntity(defaultRole));
+
+        if (user.getPassword() == null) {
+            user.setPassword("oauth2user"); // 실제 운영에서는 보안에 맞는 기본값 또는 랜덤 값을 설정해야 합니다.
+        }
 
         return userRepository.save(user);
     }

@@ -33,7 +33,11 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         // JWT 생성
         String token = jwtTokenProvider.createToken(username, roleName, userId);
 
+        // JWT 생성 후 로그 찍기
+        System.out.println("Generated JWT Token: " + token);
+
         // JWT를 프론트엔드로 리다이렉트 (쿼리 파라미터로 전달)
+        response.setHeader("Authorization", "Bearer " + token);
         response.sendRedirect("http://localhost:3000/oauth2/callback?token=" + token);
     }
 
