@@ -64,6 +64,9 @@ public class SecurityConfig {
                         // Role API 등 관리자가 필요한 요청
                         .requestMatchers("/api/roles/**").hasRole("ADMIN")
 
+                        .requestMatchers(HttpMethod.DELETE, "/api/qna/answers/{answer_id}").permitAll()
+                        .requestMatchers(HttpMethod.PATCH, "/api/qna/answers/{answer_id}").permitAll()
+
                         // 나머지 요청들은 인증 필요
                         .anyRequest().authenticated()
                 )
