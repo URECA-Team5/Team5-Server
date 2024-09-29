@@ -24,13 +24,25 @@ public class OAuthAttributes {
     }
 
     public static OAuthAttributes of(String registrationId, String userNameAttributeName, Map<String, Object> attributes) {
-        if ("kakao".equals(registrationId)) {
+        if ("google".equals(registrationId)) {
+            return ofGoogle(userNameAttributeName, attributes);
+        } else if ("kakao".equals(registrationId)) {
             return ofKakao(attributes);
         }
         throw new IllegalArgumentException("Unsupported registrationId: " + registrationId);
     }
 
-    // 카카오 로그인 사용
+    // 구글 OAuth 속성 처리
+    private static OAuthAttributes ofGoogle(String userNameAttributeName, Map<String, Object> attributes) {
+        return OAuthAttributes.builder()
+                .name((String) attributes.get("name"))  // 구글에서 제공하는 사용자 이름
+                .email((String) attributes.get("email"))  // 구글에서 제공하는 사용자 이메일
+                .attributes(attributes)
+                .nameAttributeKey(userNameAttributeName)  // 구글의 고유 사용자 ID (sub)
+                .build();
+    }
+
+    // 카카오 OAuth 속성 처리
     private static OAuthAttributes ofKakao(Map<String, Object> attributes) {
         System.out.println("Kakao OAuth2 attributes: " + attributes);  // Kakao에서 받은 사용자 정보 로그 출력
 
