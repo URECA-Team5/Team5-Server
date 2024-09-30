@@ -71,11 +71,24 @@ public class UserService {
             newUser.setPassword(passwordEncoder.encode(userDTO.getPassword()));
         }
 
-        // 역할 설정 (소셜 로그인과 로컬 로그인 모두 기본 역할 MEMBER 부여)
-        String roleName = (userDTO.getRoleName() != null && !userDTO.getRoleName().isEmpty()) ? userDTO.getRoleName() : "MEMBER";
-        Role role = roleRepository.findByRoleName(roleName)
-                .orElseThrow(() -> new RuntimeException("Role not found: " + roleName));
-        newUser.setRole(role);
+
+        // 역할 설정
+        String roleName = userDTO.getRoleName();
+        System.out.println("roleName"+roleName);
+        if (roleName == null || roleName.isEmpty()) {
+            roleName = "MEMBER";
+            System.out.println("Role name is null or empty. Assigning default role: " + roleName);
+        }
+        
+        
+
+        Optional<Role> roleOptional = roleRepository.findByRoleName(roleName);
+        if (roleOptional.isPresent()) {
+            newUser.setRole(roleOptional.get());
+        } else {
+            throw new RuntimeException("Role not found: " + roleName);
+        }
+
 
         // 사용자 저장
         userRepository.save(newUser);

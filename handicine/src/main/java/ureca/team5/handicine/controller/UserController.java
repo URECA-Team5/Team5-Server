@@ -23,6 +23,7 @@ public class UserController {
     // 회원가입
     @PostMapping("/signup")
     public ResponseEntity<UserDTO> signup(@RequestBody UserDTO userDTO) {
+    	System.out.println("roleName : "+userDTO.getRoleName());
         UserDTO createdUser = userService.createUser(userDTO);
         return ResponseEntity.ok(createdUser);
     }

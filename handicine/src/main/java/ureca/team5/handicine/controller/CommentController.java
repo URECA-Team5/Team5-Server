@@ -40,6 +40,7 @@ public class CommentController {
     // 댓글 삭제
     @DeleteMapping("/{comment_id}")
     public ResponseEntity<Void> deleteComment(@PathVariable("comment_id") Long comment_id) {
+    	System.out.println("deleteComment");
         commentService.deleteComment(comment_id);
         return ResponseEntity.noContent().build();
     }

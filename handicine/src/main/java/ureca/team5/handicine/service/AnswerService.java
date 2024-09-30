@@ -30,6 +30,7 @@ public class AnswerService {
     }
 
     public AnswerDTO createAnswer(Long questionId, AnswerDTO answerDTO) {
+    	System.out.println("createAnswer");
         Question question = questionRepository.findById(questionId)
                 .orElseThrow(() -> new RuntimeException("Question not found."));
         Answer answer = new Answer();
@@ -37,6 +38,7 @@ public class AnswerService {
         answer.setUser(userRepository.findByUsername(answerDTO.getAuthorUsername())
                 .orElseThrow(() -> new RuntimeException("User not found.")));
         answer.setQuestion(question);
+        
         Answer savedAnswer = answerRepository.save(answer);
         return convertToDTO(savedAnswer);
     }

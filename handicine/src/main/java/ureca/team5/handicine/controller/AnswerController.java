@@ -19,6 +19,7 @@ public class AnswerController {
     // 특정 질문글의 모든 답변 조회
     @GetMapping("/{question_id}/answers")
     public ResponseEntity<List<AnswerDTO>> getAllAnswersForQuestion(@PathVariable("question_id") Long question_id) {
+    	System.out.println("getAllAnswersForQuestion : 야야야야ㅗ호호호호호");
         List<AnswerDTO> answers = answerService.getAnswersByQuestionId(question_id);
         return ResponseEntity.ok(answers);
     }
@@ -26,6 +27,7 @@ public class AnswerController {
     // 답변 작성
     @PostMapping("/{question_id}/answers")
     public ResponseEntity<AnswerDTO> createAnswer(@PathVariable("question_id") Long question_id, @RequestBody AnswerDTO answerDTO) {
+    	System.out.println("제발 들어와라.....제createAnswer");
     	AnswerDTO createdAnswer = answerService.createAnswer(question_id, answerDTO);
         return ResponseEntity.ok(createdAnswer);
     }
@@ -40,6 +42,7 @@ public class AnswerController {
     // 답변 삭제
     @DeleteMapping("/answers/{answer_id}")
     public ResponseEntity<Void> deleteAnswer(@PathVariable("answer_id") Long answer_id) {
+    	System.out.println("삭제 안돼?");
         answerService.deleteAnswer(answer_id);
         return ResponseEntity.noContent().build();
     }

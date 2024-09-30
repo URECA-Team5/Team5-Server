@@ -47,6 +47,8 @@ public class PostController {
     // 게시글 삭제
     @DeleteMapping("/{post_id}")
     public ResponseEntity<Void> deletePost(@PathVariable("post_id") Long post_id) {
+    	System.out.println("deletePost");
+    	
         postService.deletePost(post_id);
         return ResponseEntity.noContent().build();
     }

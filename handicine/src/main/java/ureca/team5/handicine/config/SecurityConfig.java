@@ -2,9 +2,13 @@ package ureca.team5.handicine.config;
 
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import ureca.team5.handicine.security.CustomUserDetailsService;
 import ureca.team5.handicine.security.JwtAuthenticationFilter;
 import ureca.team5.handicine.security.JwtTokenProvider;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,15 +33,20 @@ public class SecurityConfig {
     private final JwtTokenProvider jwtTokenProvider;
     private final OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
 
+
+    private CustomUserDetailsService customUserDetailsService;
+    
     @Autowired
     public SecurityConfig(JwtTokenProvider jwtTokenProvider, OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler) {
         this.jwtTokenProvider = jwtTokenProvider;
         this.oAuth2AuthenticationSuccessHandler = oAuth2AuthenticationSuccessHandler;
     }
 
+
     // 최신 SecurityFilterChain 방식
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    	System.out.println();
         http
                 .csrf(AbstractHttpConfigurer::disable) // CSRF 비활성화
                 .formLogin(AbstractHttpConfigurer::disable) // Form 로그인 비활성화
@@ -48,8 +57,10 @@ public class SecurityConfig {
                         .requestMatchers("/", "/api/qna", "/api/qna/{question_id}", "/api/medicines/search", "/api/board", "/api/board/{post_id}", "/api/users/signup", "/api/users/login", "/login", "/oauth2/**").permitAll()
 
                         // Q&A 게시판에 답변 작성은 전문가만 가능
-                        .requestMatchers(HttpMethod.POST, "/api/qna/{question_id}/answers").hasRole("EXPERT")
-
+                        .requestMatchers(HttpMethod.POST, "/api/qna/{question_id}/answers").hasAuthority("expert")
+                       
+                        .requestMatchers(HttpMethod.DELETE, "/api/qna/answers/{answer_id}").permitAll()
+                        .requestMatchers(HttpMethod.PATCH, "/api/qna/answers/{answer_id}").permitAll()
                         // Q&A 게시판에 답변 조회는 누구나 가능
                         .requestMatchers(HttpMethod.GET, "/api/qna/{question_id}/answers").permitAll()
 
