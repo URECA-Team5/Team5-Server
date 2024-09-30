@@ -24,30 +24,44 @@ public class OAuthAttributes {
     }
 
     public static OAuthAttributes of(String registrationId, String userNameAttributeName, Map<String, Object> attributes) {
-        if ("kakao".equals(registrationId)) {
+        if ("google".equals(registrationId)) {
+            return ofGoogle(userNameAttributeName, attributes);
+        } else if ("kakao".equals(registrationId)) {
             return ofKakao(attributes);
         }
-        return ofGoogle(userNameAttributeName, attributes); // 기본적으로 Google 사용
+        throw new IllegalArgumentException("Unsupported registrationId: " + registrationId);
     }
 
-    // Google 로그인 사용
+    // 구글 OAuth 속성 처리
     private static OAuthAttributes ofGoogle(String userNameAttributeName, Map<String, Object> attributes) {
         return OAuthAttributes.builder()
-                .name((String) attributes.get("name"))
-                .email((String) attributes.get("email"))
+                .name((String) attributes.get("name"))  // 구글에서 제공하는 사용자 이름
+                .email((String) attributes.get("email"))  // 구글에서 제공하는 사용자 이메일
                 .attributes(attributes)
-                .nameAttributeKey(userNameAttributeName)
+                .nameAttributeKey(userNameAttributeName)  // 구글의 고유 사용자 ID (sub)
                 .build();
     }
 
-    // 카카오 로그인 사용
+    // 카카오 OAuth 속성 처리
     private static OAuthAttributes ofKakao(Map<String, Object> attributes) {
+        System.out.println("Kakao OAuth2 attributes: " + attributes);  // Kakao에서 받은 사용자 정보 로그 출력
+
         Map<String, Object> kakaoAccount = (Map<String, Object>) attributes.get("kakao_account");
         Map<String, Object> profile = (Map<String, Object>) kakaoAccount.get("profile");
 
+        // 이메일이 없을 경우 처리
+        String email = (String) kakaoAccount.get("email");
+        if (email == null || email.isEmpty()) {
+            email = profile.get("nickname") + "@kakao.com";  // 임시 이메일 할당
+            System.out.println("Email is null or empty. Assigning default email: " + email);
+        }
+
+        System.out.println("Kakao OAuth2 name: " + profile.get("nickname"));
+        System.out.println("Kakao OAuth2 email: " + email);
+
         return OAuthAttributes.builder()
                 .name((String) profile.get("nickname"))
-                .email((String) kakaoAccount.get("email"))
+                .email(email)
                 .attributes(attributes)
                 .nameAttributeKey("id")
                 .build();

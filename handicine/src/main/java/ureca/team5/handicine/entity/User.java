@@ -36,8 +36,9 @@ public class User {
         return Collections.singletonList(new SimpleGrantedAuthority(role.getRoleName()));
     }
 
-    public User update(String username) {
+    public User update(String username, String email) {
         this.username = username;
+        this.email = email;
         return this;
     }
 }
