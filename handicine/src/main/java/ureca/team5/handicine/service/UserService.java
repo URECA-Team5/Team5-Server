@@ -28,11 +28,13 @@ public class UserService {
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
 
+    // 로컬 로그인 처리
     public String login(LoginRequestDTO loginRequest) {
         User user = userRepository.findByUsername(loginRequest.getUsername())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
+        // 로컬 사용자일 경우 비밀번호를 검증, 소셜 로그인 사용자는 비밀번호 검증 생략
+        if (user.getPassword() != null && !passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
             throw new RuntimeException("Invalid credentials");
         }
 
@@ -40,93 +42,65 @@ public class UserService {
         return jwtTokenProvider.createToken(user.getUsername(), user.getRole().getRoleName(), user.getUserId());
     }
 
+    // 로그아웃 처리 (JWT 삭제 방식은 클라이언트에서 처리)
     public void logout() {
-        // 클라이언트 측에서 JWT 토큰을 삭제하는 방식으로 로그아웃 처리
-        // 서버 측에서는 특별한 처리가 필요하지 않음 (서버는 JWT 상태를 유지하지 않기 때문)
-        // 토큰 무효화 기능이 필요할 경우 Redis 등을 활용하여 블랙리스트 방식으로 구현할 수 있음
+        // 클라이언트에서 토큰을 삭제하는 방식으로 처리
     }
 
-    public UserDTO getUserById(Long id) {
-        Optional<User> user = userRepository.findById(id);
-        if (user.isPresent()) {
-            User foundUser = user.get();
-            return new UserDTO(foundUser.getUserId(), foundUser.getUsername(), foundUser.getEmail(), foundUser.getRole().getRoleName());
-        } else {
-            throw new RuntimeException("User not found.");
-        }
-    }
-
-    // username을 사용하여 사용자 정보 조회
+    // 사용자 정보 조회 (username으로 조회)
     public UserDTO getUserByUsername(String username) {
-        Optional<User> user = userRepository.findByUsername(username);
-        if (user.isPresent()) {
-            User foundUser = user.get();
-            return new UserDTO(foundUser.getUserId(), foundUser.getUsername(), foundUser.getEmail(), foundUser.getRole().getRoleName());
-        } else {
-            throw new RuntimeException("User not found.");
-        }
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found."));
+        return new UserDTO(user.getUserId(), user.getUsername(), user.getEmail(), user.getRole().getRoleName());
     }
 
+    // 사용자 생성 (소셜 로그인과 로컬 로그인 사용자 모두 처리)
     public UserDTO createUser(UserDTO userDTO) {
-        // 새로운 사용자 생성
         User newUser = new User();
         newUser.setUsername(userDTO.getUsername());
-        newUser.setEmail(userDTO.getEmail());
 
-        // 비밀번호 설정
+        // 이메일 설정
+        if (userDTO.getEmail() == null || userDTO.getEmail().isEmpty()) {
+            newUser.setEmail(userDTO.getUsername() + "@handicine.com");  // 임시 이메일 설정
+        } else {
+            newUser.setEmail(userDTO.getEmail());
+        }
+
+        // 소셜 로그인 사용자는 비밀번호가 없을 수 있으므로 비밀번호 설정 조건 추가
         if (userDTO.getPassword() != null && !userDTO.getPassword().isEmpty()) {
             newUser.setPassword(passwordEncoder.encode(userDTO.getPassword()));
-        } else {
-            throw new RuntimeException("Password cannot be null or empty");
         }
 
-        // 역할 설정
-        String roleName = userDTO.getRoleName();
-        if (roleName == null || roleName.isEmpty()) {
-            roleName = "MEMBER";
-            System.out.println("Role name is null or empty. Assigning default role: " + roleName);
-        }
-
-        Optional<Role> roleOptional = roleRepository.findByRoleName(roleName);
-        if (roleOptional.isPresent()) {
-            newUser.setRole(roleOptional.get());
-        } else {
-            throw new RuntimeException("Role not found: " + roleName);
-        }
+        // 역할 설정 (소셜 로그인과 로컬 로그인 모두 기본 역할 MEMBER 부여)
+        String roleName = (userDTO.getRoleName() != null && !userDTO.getRoleName().isEmpty()) ? userDTO.getRoleName() : "MEMBER";
+        Role role = roleRepository.findByRoleName(roleName)
+                .orElseThrow(() -> new RuntimeException("Role not found: " + roleName));
+        newUser.setRole(role);
 
         // 사용자 저장
         userRepository.save(newUser);
 
-        // 생성된 사용자 정보를 DTO로 반환
-        return new UserDTO(newUser.getUserId(), newUser.getUsername(), newUser.getEmail(), newUser.getRole().getRoleName(), newUser.getPassword());
+        return new UserDTO(newUser.getUserId(), newUser.getUsername(), newUser.getEmail(), newUser.getRole().getRoleName());
     }
 
-    public UserDTO updateUser(Long id, UserDTO userDTO) {
-        Optional<User> userOptional = userRepository.findById(id);
-        if (userOptional.isPresent()) {
-            User existingUser = userOptional.get();
-            existingUser.setUsername(userDTO.getUsername());
-            existingUser.setEmail(userDTO.getEmail());
-            Optional<Role> roleOptional = roleRepository.findByRoleName(userDTO.getRoleName());
-            if (roleOptional.isPresent()) {
-                existingUser.setRole(roleOptional.get());
-            } else {
-                throw new RuntimeException("Role not found: " + userDTO.getRoleName());
-            }
-            if (userDTO.getPassword() != null && !userDTO.getPassword().isEmpty()) {
-                existingUser.setPassword(passwordEncoder.encode(userDTO.getPassword())); // 비밀번호 암호화
-            }
-            userRepository.save(existingUser);
-
-            return new UserDTO(existingUser.getUserId(), existingUser.getUsername(), existingUser.getEmail(), existingUser.getRole().getRoleName(), existingUser.getPassword());
-        } else {
-            throw new RuntimeException("User not found.");
+    // 소셜 로그인 사용자 정보 저장
+    public UserDTO saveSocialUser(String username, String email) {
+        // 사용자 정보가 있으면 기존 사용자 반환
+        Optional<User> existingUser = userRepository.findByUsername(username);
+        if (existingUser.isPresent()) {
+            User user = existingUser.get();
+            return new UserDTO(user.getUserId(), user.getUsername(), user.getEmail(), user.getRole().getRoleName());
         }
+
+        // 새로운 사용자 생성
+        UserDTO userDTO = new UserDTO();
+        userDTO.setUsername(username);
+        userDTO.setEmail(email);
+        return createUser(userDTO);  // 소셜 사용자도 같은 방식으로 저장
     }
 
-    // username을 사용하여 사용자 정보 수정
+    // 사용자 정보 수정 (username 기반으로)
     public UserDTO updateUserByUsername(String username, UserDTO userDTO) {
-        // 사용자 조회
         User existingUser = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found: " + username));
 
@@ -134,10 +108,7 @@ public class UserService {
         existingUser.setUsername(userDTO.getUsername());
         existingUser.setEmail(userDTO.getEmail());
 
-        // role_name 로그 출력
-        System.out.println("Received role_name: " + userDTO.getRoleName());
-
-        // 역할(Role) 업데이트
+        // 역할 업데이트
         Optional<Role> roleOptional = roleRepository.findByRoleName(userDTO.getRoleName());
         if (roleOptional.isPresent()) {
             existingUser.setRole(roleOptional.get());
@@ -145,24 +116,18 @@ public class UserService {
             throw new RuntimeException("Role not found: " + userDTO.getRoleName());
         }
 
-        // 비밀번호가 null 또는 빈 값이 아닐 때만 업데이트
+        // 비밀번호는 null 또는 빈 값이 아닌 경우만 업데이트 (소셜 로그인 사용자는 비밀번호 없이 로그인 가능)
         if (userDTO.getPassword() != null && !userDTO.getPassword().isEmpty()) {
             existingUser.setPassword(passwordEncoder.encode(userDTO.getPassword()));
         }
 
-        // 사용자 저장
+        // 사용자 정보 저장
         userRepository.save(existingUser);
 
-        // 업데이트된 사용자 정보를 DTO로 반환
-        return new UserDTO(
-                existingUser.getUserId(),
-                existingUser.getUsername(),
-                existingUser.getEmail(),
-                existingUser.getRole().getRoleName(),
-                existingUser.getPassword()
-        );
+        return new UserDTO(existingUser.getUserId(), existingUser.getUsername(), existingUser.getEmail(), existingUser.getRole().getRoleName());
     }
 
+    // 사용자 삭제
     public void deleteUser(Long id) {
         userRepository.deleteById(id);
     }
