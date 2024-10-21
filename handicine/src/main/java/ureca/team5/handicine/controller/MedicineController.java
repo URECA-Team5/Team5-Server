@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import ureca.team5.handicine.entity.Medicine;
 import ureca.team5.handicine.service.MedicineService;
 //import org.springframework.web.bind.annotation.RestController;
-//PharmacyController.java
+
 @RestController
 @CrossOrigin(origins = "http://localhost:3000")
 @RequestMapping("/api/medicines")
